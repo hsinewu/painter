@@ -1,3 +1,5 @@
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
     #app {
         width: 100%;
@@ -5,6 +7,7 @@
         background-color: #eee;
     }
     canvas {
+        margin: 10;
         border: 1px solid #000;
         background-color: #fff;
     }
@@ -12,10 +15,16 @@
 </style>
 
 <div id="app">
-    <canvas id="canvas" width="900" height="600"></canvas>
+    <canvas id="canvas"></canvas>
 </div>
 
 <script>
+
+    function resize() {
+
+        canvas.width = window.innerWidth - 40;
+        canvas.height = window.innerHeight - 40;
+    }
 
     var drawMode = 'pen';
 
@@ -43,21 +52,42 @@
         },
     };
 
+    var event = {
+        onmove(e) {
+
+            if(e.changedTouches)
+                e = e.changedTouches[0];
+            mouse.x = Math.floor(e.clientX - e.target.offsetLeft);
+            mouse.y = Math.floor(e.clientY - e.target.offsetTop);
+        },
+        ondown(e) {
+
+            mouse.isDown = true;
+            this.onmove(e);
+            pen.x = mouse.x;
+            pen.y = mouse.y;
+        },
+        onlift() {
+            mouse.isDown = false;
+        }
+    }
+
     function main() {
 
         var canvas = document.getElementById('canvas');
         ctx = canvas.getContext('2d');
-        canvas.onmousemove = updateMouse;
-        canvas.onmousedown = _ => { mouse.isDown = true; updateMouse(_); pen.x = mouse.x; pen.y = mouse.y;};
-        canvas.onmouseup = _=> { mouse.isDown = false; };
+        canvas.onmousemove = e=>event.onmove(e);
+        canvas.ontouchmove = e=>event.onmove(e);
+        canvas.onmousedown = e=>event.ondown(e);
+        canvas.ontouchstart = e=>event.ondown(e);
+        canvas.onmouseup = e=>event.onlift(e);
+        canvas.ontouchend = e=>event.onlift(e);
+
+        // resize will reset canvas data OMEGA LUL
+        // window.onresize = resize;
         
+        resize();
         requestAnimationFrame(paint);
-    }
-
-    function updateMouse(event) {
-
-        mouse.x = event.clientX - event.target.offsetLeft;
-        mouse.y = event.clientY - event.target.offsetTop;
     }
 
     function paint() {
